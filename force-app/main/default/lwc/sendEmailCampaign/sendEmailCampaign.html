@@ -1,0 +1,287 @@
+<template>
+    <lightning-card title="Send Email Campaign">
+
+        <div class="slds-p-around_medium">
+            <!-- Email Template Selection -->
+            <div class="email-template-section">
+                <lightning-combobox 
+                    label="Select Campaign Type" 
+                    options={campaignTypeOpttions} 
+                    onchange={campaignTypeHandler}
+                    value={selectedCampaignOption}>
+                </lightning-combobox>
+            </div>
+        </div>
+
+        <div class="slds-p-around_medium">
+            <!-- Email Template Selection -->
+            <div class="email-template-section">
+                <lightning-combobox 
+                    label="Select Email Template" 
+                    options={emailTemplates}
+                    value={selectedTemplate} 
+                    onchange={handleTemplateChange}>
+                </lightning-combobox>
+            </div>
+
+            <!-- Available Merge Fields -->
+            <div class="merge-fields-container">
+                
+                    <div class="merge-fields-title">
+                        Insert Merge Fields:
+                    </div>
+                    <div class="merge-fields-buttons">
+                        <lightning-button-group>
+                            <lightning-button
+                                label="Title"
+                                onclick={insertMergeField}
+                                data-field="Title"
+                                class="slds-m-right_small">
+                            </lightning-button>
+                            <lightning-button
+                                label="First Name"
+                                onclick={insertMergeField}
+                                data-field="FirstName"
+                                class="slds-m-right_small">
+                            </lightning-button>
+                            <lightning-button
+                                label="Last Name"
+                                onclick={insertMergeField}
+                                data-field="LastName"
+                                class="slds-m-right_small">
+                            </lightning-button>
+                            <lightning-button
+                                label="Name"
+                                onclick={insertMergeField}
+                                data-field="Name"
+                                class="slds-m-right_small">
+                            </lightning-button>
+                            <lightning-button
+                                label="Company"
+                                onclick={insertMergeField}
+                                data-field="Company"
+                                class="slds-m-right_small">
+                            </lightning-button>
+                            <lightning-button
+                                label="City"
+                                onclick={insertMergeField}
+                                data-field="City"
+                                class="slds-m-right_small">
+                            </lightning-button>
+                            
+                        </lightning-button-group>
+                    </div>
+
+                                
+                <p class="slds-m-top_x-small slds-text-color_weak">
+                    Tip: Click on Subject or Email Body before inserting a merge field
+                </p>                
+            </div>
+
+            <!-- Subject Input -->
+            <div class="subject-input">
+                <lightning-input 
+                type="text" 
+                label="Subject" 
+                value={subject} 
+                data-id="subjectInput"
+                onfocus={handleFocus}
+                onchange={handleSubjectChange}
+                disabled={isSubjectHidden}>
+                </lightning-input>
+            </div>
+
+            
+            <!-- Rich Text Editor for Email Body -->
+            
+            <div class="body-input">
+                <lightning-input-rich-text 
+                    label="Email Body" 
+                    value={body} 
+                    data-id="bodyInput"
+                    onfocus={handleFocus}
+                    onchange={handleBodyChange}
+                    formats="font bold italic underline list table"
+                    enable-insert-image="false"
+                    enable-link="true"
+                    placeholder="Enter email body here">
+                 </lightning-input-rich-text>
+            </div>
+
+           
+
+            <!-- Recipient Count -->
+            <div class="slds-m-top_medium slds-m-bottom_medium">
+                <lightning-badge label={recipientCountLabel}></lightning-badge>
+                <template if:true={isBatchProcess}>
+                    <div class="slds-text-color_error slds-m-top_x-small">
+                        You've selected {selectedCount} recipients. Maximum of 90 can be processed at once.
+                    </div>
+                </template>
+            </div>
+
+            <!-- Recipient List Preview -->
+            <template if:true={showRecipients}>
+                
+                <div class="recipients-section">
+                    <div class="recipients-header">
+                        <strong>Recipient Selection:</strong>
+
+                        <lightning-button 
+                            label={toggleRecipientsLabel} 
+                            variant="neutral" 
+                            onclick={toggleRecipients} 
+                            class="slds-m-left_medium">
+                        </lightning-button>
+                    </div>
+                </div>
+                
+                <template if:true={recipientsExpanded}>
+                    <div class="slds-m-top_small slds-scrollable_y" style="max-height: 300px;">
+                        <lightning-datatable
+                            key-field="Id"
+                            data={recipients}
+                            columns={recipientColumns}
+                            onrowselection={handleRowSelection}
+                            selected-rows={preSelectedRows}>
+                        </lightning-datatable>
+                    </div>
+                </template>
+                
+            </template>
+
+            <!-- Email Actions -->
+            <div class="email-actions">
+                <lightning-button 
+                    label="Preview" 
+                    variant="neutral" 
+                    onclick={previewEmail} 
+                    class="slds-m-right_small">
+                </lightning-button>
+
+                <lightning-button 
+                    label="Send Follow-Up" 
+                    variant="brand" 
+                    onclick={sendFollowUpEmails}
+                    disabled={isFollowUpDisabled} 
+                    >
+                </lightning-button>
+
+                <lightning-button 
+                    label="Send Emails" 
+                    variant="brand" 
+                    onclick={confirmSendEmails} 
+                    disabled={isSendDisabled}>
+                </lightning-button>
+            </div>
+        </div>
+    </lightning-card>
+    
+    <!-- Enhanced Preview Modal -->
+    <template if:true={showPreview}>
+        <section role="dialog" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <header class="slds-modal__header">
+                    <h2 class="slds-text-heading_medium">Email Preview</h2>
+                    <lightning-button-icon 
+                        icon-name="utility:close" 
+                        variant="bare-inverse" 
+                        alternative-text="Close"
+                        onclick={closePreview}>
+                    </lightning-button-icon>
+                </header>
+                <div class="slds-modal__content slds-p-around_medium">
+                    <div class="slds-box slds-theme_default">
+                        <div class="slds-grid slds-gutters">
+                            <div class="slds-col slds-size_1-of-6">
+                                <strong>To:</strong>
+                            </div>
+                            <div class="slds-col slds-size_5-of-6">
+                                <template if:true={selectedLeadIds.length}>
+                                    <lightning-badge label={selectedRecipientsLabel}></lightning-badge>
+                                </template>
+                                <template if:false={selectedLeadIds.length}>
+                                    [Preview Recipient]
+                                </template>
+                            </div>
+                        </div>
+                        <div class="slds-grid slds-gutters slds-m-top_small">
+                            <div class="slds-col slds-size_1-of-6">
+                                <strong>Subject:</strong>
+                            </div>
+                            <div class="slds-col slds-size_5-of-6">
+                                {previewSubject}
+                            </div>
+                        </div>
+                        <div class="slds-m-top_medium slds-border_top slds-p-top_medium">
+                            <lightning-formatted-rich-text value={previewBody}></lightning-formatted-rich-text>
+                        </div>
+                    </div>
+                </div>
+                <footer class="slds-modal__footer">
+                    <lightning-button 
+                        variant="neutral" 
+                        label="Close" 
+                        onclick={closePreview}>
+                    </lightning-button>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+
+    <!-- Confirmation Modal -->
+    <template if:true={showConfirmation}>
+        <section role="dialog" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <header class="slds-modal__header">
+                    <h2 class="slds-text-heading_medium">Confirm Send</h2>
+                    <lightning-button-icon 
+                        icon-name="utility:close" 
+                        variant="bare-inverse" 
+                        alternative-text="Close"
+                        onclick={closeConfirmation}>
+                    </lightning-button-icon>
+                </header>
+                <div class="slds-modal__content slds-p-around_medium">
+                    <p>You are about to send emails to <strong>{selectedCount}</strong> selected recipients.</p>
+                    <p class="slds-m-top_medium">Are you sure you want to proceed?</p>
+                </div>
+                <footer class="slds-modal__footer">
+                    <lightning-button 
+                        variant="neutral" 
+                        label="Cancel" 
+                        onclick={closeConfirmation} 
+                        class="slds-m-right_small">
+                    </lightning-button>
+                    <lightning-button 
+                        variant="brand" 
+                        label="Send" 
+                        onclick={sendEmails}>
+                    </lightning-button>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+
+    
+
+    <!-- Sent Status Table -->
+    <template if:true={sentEmails.length}>
+        <lightning-card title="Email Sent Status">
+            <div class="slds-p-around_medium">
+                <lightning-datatable
+                    key-field="Email"
+                    data={sentEmails}
+                    columns={statusColumns}
+                    hide-checkbox-column>
+                </lightning-datatable>
+            </div>
+        </lightning-card>
+    </template>
+    <!-- Progress Indicator -->
+    <template if:true={isLoading}>
+        <lightning-spinner alternative-text="Sending Emails..."></lightning-spinner>
+    </template>
+</template>

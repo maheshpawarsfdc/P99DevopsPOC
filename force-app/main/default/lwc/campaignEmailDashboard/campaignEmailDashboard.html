@@ -1,0 +1,561 @@
+<template>
+    <lightning-card title="Campaign Email Tracking Dashboard" icon-name="standard:campaign">
+        <div class="slds-p-around_medium">
+            <template if:true={isLoading}>
+                <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
+            </template>
+            
+            <!-- Mode Toggle -->
+            <!-- <div class="slds-grid slds-grid_align-end slds-m-bottom_small">
+                <div class="slds-form-element">
+                    <div class="slds-form-element__control">
+                        <div class="slds-checkbox_toggle slds-grid">
+                            <span class="slds-m-right_x-small">Light</span>
+                            <input type="checkbox" name="themeToggle" id="themeToggle" aria-describedby="toggle-desc" value="on" onchange={handleThemeToggle} />
+                            <label class="slds-checkbox_toggle_faux" for="themeToggle">
+                                <span class="slds-checkbox_toggle_faux_label slds-checkbox_toggle_faux_label_off">Off</span>
+                                <span class="slds-checkbox_toggle_faux_label slds-checkbox_toggle_faux_label_on">On</span>
+                            </label>
+                            <span class="slds-m-left_x-small">Dark</span>
+                        </div>
+                    </div>
+                </div>
+            </div> -->
+
+            <!-- Tabs for organizing views -->
+            <lightning-tabset variant="scoped">
+                <lightning-tab label="Dashboard" icon-name="utility:dashboard">
+                    <!-- Collapsible Sidebar + Content Layout -->
+                    <div class="sidebar-content-wrapper">
+                        <!-- Collapsible Filter Sidebar -->
+                        <div class={sidebarClass}>
+                            <div class="sidebar-toggle" onclick={toggleSidebar}>
+                                <lightning-icon icon-name={sidebarToggleIcon} size="small"></lightning-icon>
+                            </div>
+                            <div class="slds-box filter-panel">
+                                <div class="slds-text-heading_small slds-m-bottom_small">Filter Options</div>
+                                
+                                <div class="slds-grid slds-wrap slds-gutters">
+                                    <div class="slds-col slds-size_1-of-1">
+                                        <lightning-input 
+                                            type="date" 
+                                            label="Start Date" 
+                                            value={startDate} 
+                                            onchange={handleStartDateChange}
+                                            class="slds-m-bottom_x-small"
+                                            variant="label-stacked">
+                                        </lightning-input>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-1">
+                                        <lightning-input 
+                                            type="date" 
+                                            label="End Date" 
+                                            value={endDate} 
+                                            onchange={handleEndDateChange}
+                                            class="slds-m-bottom_x-small"
+                                            variant="label-stacked">
+                                        </lightning-input>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-1">
+                                        <lightning-combobox
+                                            name="userSelect"
+                                            label="Select User"
+                                            value={selectedUserId}
+                                            options={userOptions}
+                                            onchange={handleUserChange}
+                                            class="slds-m-bottom_x-small"
+                                            variant="label-stacked">
+                                        </lightning-combobox>
+                                    </div>
+                                    
+                                    <!-- New Advanced Filters -->
+                                    <!-- <div class="slds-col slds-size_1-of-1">
+                                        <lightning-combobox
+                                            name="campaignTypeSelect"
+                                            label="Campaign Type"
+                                            value={selectedCampaignType}
+                                            options={campaignTypeOptions}
+                                            onchange={handleCampaignTypeChange}
+                                            class="slds-m-bottom_x-small"
+                                            variant="label-stacked">
+                                        </lightning-combobox>
+                                    </div>
+                                    
+                                    <div class="slds-col slds-size_1-of-1">
+                                        <lightning-input 
+                                            type="search"
+                                            label="Search Campaigns" 
+                                            value={searchTerm}
+                                            onchange={handleSearchChange}
+                                            class="slds-m-bottom_x-small"
+                                            variant="label-stacked">
+                                        </lightning-input>
+                                    </div> -->
+                                    
+                                    <div class="slds-col slds-size_1-of-1">
+                                        <div class="slds-text-title slds-m-bottom_x-small">Performance Thresholds</div>
+                                        <lightning-slider 
+                                            value={emailCompletionThreshold}
+                                            min="0"
+                                            max="100"
+                                            step="5"
+                                            label="Show campaigns with first email completion less than"
+                                            onchange={handleThresholdChange}
+                                            class="slds-m-bottom_medium">
+                                        </lightning-slider>
+                                    </div>
+                                    
+                                    <div class="slds-col slds-size_1-of-1 slds-m-top_small">
+                                        <lightning-button 
+                                            label="Apply Filters" 
+                                            variant="brand" 
+                                            icon-name="utility:filterList"
+                                            onclick={handleRefresh}
+                                            class="slds-m-right_x-small">
+                                        </lightning-button>
+                                        <lightning-button 
+                                            label="Reset Filters" 
+                                            variant="neutral" 
+                                            onclick={handleResetFilters}>
+                                        </lightning-button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Main Content -->
+                        <div class={mainContentClass}>
+                            <!-- Error Banner -->
+                            <template if:true={error}>
+                                <div class="slds-notify slds-notify_alert slds-theme_alert-texture slds-theme_error slds-m-bottom_medium" role="alert">
+                                    <span class="slds-assistive-text">Error</span>
+                                    <lightning-icon icon-name="utility:error" class="slds-icon slds-icon_small slds-m-right_x-small" alternative-text="Error"></lightning-icon>
+                                    <h2>{error}</h2>
+                                    <div class="slds-notify__close">
+                                        <button class="slds-button slds-button_icon slds-button_icon-small" title="Close" onclick={clearError}>
+                                            <lightning-icon icon-name="utility:close" size="small" alternative-text="Close"></lightning-icon>
+                                            <span class="slds-assistive-text">Close</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </template>
+                            
+                            <!-- Dashboard Stats -->
+                            <template if:false={error}>
+                                <template if:true={campaignsData.length}>
+                                    <!-- Summary Metrics -->
+                                    <div class="slds-box slds-theme_default slds-m-bottom_medium">
+                                        <div class="slds-grid slds-wrap slds-grid_align-center">
+                                            <div class="slds-col slds-size_1-of-1">
+                                                <div class="slds-text-heading_medium slds-text-align_center slds-m-bottom_medium">
+                                                    Overall Campaign Metrics
+                                                </div>
+                                            </div>
+                                            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_x-small">
+                                                <div class="slds-box slds-box_small slds-theme_shade slds-text-align_center">
+                                                    <div class="slds-text-heading_small">Total Campaigns</div>
+                                                    <div class="slds-text-heading_large slds-m-top_x-small">{campaignsData.length}</div>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- New Summary Metrics -->
+                                            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_x-small">
+                                                <div class="slds-box slds-box_small slds-theme_shade slds-text-align_center">
+                                                    <div class="slds-text-heading_small">Total Leads</div>
+                                                    <div class="slds-text-heading_large slds-m-top_x-small">{totalLeads}</div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_x-small">
+                                                <div class="slds-box slds-box_small slds-theme_shade slds-text-align_center">
+                                                    <div class="slds-text-heading_small">Avg. Email Completion</div>
+                                                    <div class="slds-text-heading_large slds-m-top_x-small">
+                                                        {avgEmailCompletion}%
+                                                        <!-- <template if:true={isEmailCompletionUp}>
+                                                            <lightning-icon icon-name="utility:arrowup" size="x-small" class="slds-m-left_xx-small trend-indicator-up"></lightning-icon>
+                                                        </template>
+                                                        <template if:false={isEmailCompletionUp}>
+                                                            <lightning-icon icon-name="utility:arrowdown" size="x-small" class="slds-m-left_xx-small trend-indicator-down"></lightning-icon>
+                                                        </template> -->
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_x-small">
+                                                <div class="slds-box slds-box_small slds-theme_shade slds-text-align_center">
+                                                    <div class="slds-text-heading_small">At-Risk Campaigns</div>
+                                                    <div class="slds-text-heading_large slds-m-top_x-small risk-indicator">
+                                                        {atRiskCampaigns}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Performance Scorecard -->
+                                    <div class="slds-box slds-theme_default slds-m-bottom_medium">
+                                        <div class="slds-text-heading_medium slds-m-bottom_small">Performance Scorecard</div>
+                                        <div class="slds-grid slds-wrap">
+                                            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-p-around_x-small">
+                                                <div class={firstEmailScoreClass}>
+                                                    <div class="slds-text-heading_small">First Email</div>
+                                                    <div class="slds-text-heading_medium slds-m-top_x-small">{firstEmailScore}%</div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-p-around_x-small">
+                                                <div class={followUpScoreClass}>
+                                                    <div class="slds-text-heading_small">Follow-up Completion</div>
+                                                    <div class="slds-text-heading_medium slds-m-top_x-small">{followUpScore}%</div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-p-around_x-small">
+                                                <div class={conversionScoreClass}>
+                                                    <div class="slds-text-heading_small">Conversion Rate</div>
+                                                    <div class="slds-text-heading_medium slds-m-top_x-small">{conversionScore}%</div>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-4 slds-p-around_x-small">
+                                                <div class={overallScoreClass}>
+                                                    <div class="slds-text-heading_small">Overall Score</div>
+                                                    <div class="slds-text-heading_medium slds-m-top_x-small">{overallScore}/100</div>
+                                                </div>
+                                            </div> -->
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Campaign Cards -->
+                                    <div class="slds-text-heading_medium slds-m-bottom_small">Campaign Details</div>
+                                    <div class="slds-grid slds-wrap">
+                                        <template for:each={campaignsData} for:item="campaign">
+                                            <div key={campaign.campaignId} class="slds-col slds-size_1-of-1 slds-medium-size_6-of-12 slds-large-size_4-of-12 slds-p-around_x-small">
+                                                <div class={campaign.cardClass}>
+                                                    <div class="slds-grid slds-grid_vertical">
+                                                        <div class="slds-col">
+                                                            <div class="slds-media">
+                                                                <div class="slds-media__figure">
+                                                                    <lightning-icon icon-name="standard:campaign" size="small"></lightning-icon>
+                                                                </div>
+                                                                <div class="slds-media__body">
+                                                                    <div class="slds-grid slds-grid_align-spread">
+                                                                        <div class="slds-text-heading_small campaign-title">
+                                                                            {campaign.campaignName}
+                                                                        </div>
+                                                                        <template if:true={campaign.isAtRisk}>
+                                                                            <lightning-badge label="At Risk" class="risk-badge"></lightning-badge>
+                                                                        </template>
+                                                                    </div>
+                                                                    <div class="slds-text-body_small slds-text-color_weak">
+                                                                        {campaign.campaignType}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            
+                                                            <div class="slds-grid slds-wrap slds-m-top_medium">
+                                                                <div class="slds-col slds-size_1-of-1 slds-large-size_1-of-2">
+                                                                    <div class="slds-text-title">TOTAL LEADS</div>
+                                                                    <div class="slds-text-heading_medium slds-m-bottom_small">
+                                                                        {campaign.totalLeads}
+                                                                        <!-- <template if:true={campaign.leadsGrowth}>
+                                                                            <span class="slds-text-body_small slds-text-color_success slds-m-left_xx-small">
+                                                                                <lightning-icon icon-name="utility:arrowup" size="xx-small" class="trend-icon-up"></lightning-icon>
+                                                                                {campaign.leadsGrowth}%
+                                                                            </span>
+                                                                        </template> -->
+                                                                    </div>
+                                                                </div>
+                                                                
+                                                                <div class="slds-col slds-size_1-of-1">
+                                                                    <div class="slds-grid slds-grid_vertical progress-section">
+                                                                        <div class="slds-col slds-m-top_small">
+                                                                            <div class="slds-grid slds-grid_align-spread">
+                                                                                <div class="slds-col">
+                                                                                    <div class="slds-text-body_small slds-text-color_weak">1st Emails Sent</div>
+                                                                                </div>
+                                                                                <div class="slds-col slds-text-align_right">
+                                                                                    <div class="slds-text-body_small slds-text-color_weak">
+                                                                                        {campaign.firstEmailCount} ({campaign.firstEmailPercentage}%)
+                                                                                        <!-- <template if:true={campaign.firstEmailTrend}>
+                                                                                            <lightning-icon icon-name={campaign.firstEmailTrendIcon} size="xx-small" class={campaign.firstEmailTrendClass}></lightning-icon>
+                                                                                        </template> -->
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                            <lightning-progress-bar value={campaign.firstEmailPercentage} size="large" 
+                                                                                                variant="success" class="slds-m-vertical_x-small"></lightning-progress-bar>
+                                                                        </div>
+                                                                        
+                                                                        <div class="slds-col slds-m-top_small">
+                                                                            <div class="slds-grid slds-grid_align-spread">
+                                                                                <div class="slds-col">
+                                                                                    <div class="slds-text-body_small slds-text-color_weak">1st Follow-ups</div>
+                                                                                </div>
+                                                                                <div class="slds-col slds-text-align_right">
+                                                                                    <div class="slds-text-body_small slds-text-color_weak">
+                                                                                        {campaign.firstFollowUpCount} ({campaign.firstFollowUpPercentage}%)
+                                                                                        <!-- <template if:true={campaign.firstFollowUpTrend}>
+                                                                                            <lightning-icon icon-name={campaign.firstFollowUpTrendIcon} size="xx-small" class={campaign.firstFollowUpTrendClass}></lightning-icon>
+                                                                                        </template> -->
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                            <lightning-progress-bar value={campaign.firstFollowUpPercentage} size="large" 
+                                                                                                variant="info" class="slds-m-vertical_x-small"></lightning-progress-bar>
+                                                                        </div>
+                                                                        
+                                                                        <div class="slds-col slds-m-top_small">
+                                                                            <div class="slds-grid slds-grid_align-spread">
+                                                                                <div class="slds-col">
+                                                                                    <div class="slds-text-body_small slds-text-color_weak">2nd Follow-ups</div>
+                                                                                </div>
+                                                                                <div class="slds-col slds-text-align_right">
+                                                                                    <div class="slds-text-body_small slds-text-color_weak">
+                                                                                        {campaign.secondFollowUpCount} ({campaign.secondFollowUpPercentage}%)
+                                                                                        <!-- <template if:true={campaign.secondFollowUpTrend}>
+                                                                                            <lightning-icon icon-name={campaign.secondFollowUpTrendIcon} size="xx-small" class={campaign.secondFollowUpTrendClass}></lightning-icon>
+                                                                                        </template> -->
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                            <lightning-progress-bar value={campaign.secondFollowUpPercentage} size="large" 
+                                                                                                variant="warning" class="slds-m-vertical_x-small"></lightning-progress-bar>
+                                                                        </div>
+                                                                        
+                                                                        <div class="slds-col slds-m-top_small">
+                                                                            <div class="slds-grid slds-grid_align-spread">
+                                                                                <div class="slds-col">
+                                                                                    <div class="slds-text-body_small slds-text-color_weak">3rd Follow-ups</div>
+                                                                                </div>
+                                                                                <div class="slds-col slds-text-align_right">
+                                                                                    <div class="slds-text-body_small slds-text-color_weak">
+                                                                                        {campaign.thirdFollowUpCount} ({campaign.thirdFollowUpPercentage}%)
+                                                                                        <!-- <template if:true={campaign.thirdFollowUpTrend}>
+                                                                                            <lightning-icon icon-name={campaign.thirdFollowUpTrendIcon} size="xx-small" class={campaign.thirdFollowUpTrendClass}></lightning-icon>
+                                                                                        </template> -->
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                            <lightning-progress-bar value={campaign.thirdFollowUpPercentage} size="large" 
+                                                                                                variant="error" class="slds-m-vertical_x-small"></lightning-progress-bar>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            
+                                                            <div class="slds-m-top_medium slds-p-top_small conversion-metrics">
+                                                                <div class="slds-text-title slds-m-bottom_x-small">EMAIL CONVERSION RATES</div>
+                                                                <div class="slds-grid slds-grid_vertical">
+                                                                    <div class="slds-col slds-m-vertical_xx-small">
+                                                                        <div class="slds-grid slds-grid_align-spread">
+                                                                            <div class="slds-col">
+                                                                                <div class="slds-text-body_small">1st → 1st Follow-up</div>
+                                                                            </div>
+                                                                            <div class="slds-col slds-text-align_right">
+                                                                                <div class="slds-text-body_small">{campaign.firstToFollowUpRate}%</div>
+                                                                            </div>
+                                                                        </div>
+                                                                        <lightning-progress-bar value={campaign.firstToFollowUpRate} size="small" 
+                                                                                            variant="info" class="slds-m-vertical_xx-small"></lightning-progress-bar>
+                                                                    </div>
+                                                                    
+                                                                    <div class="slds-col slds-m-vertical_xx-small">
+                                                                        <div class="slds-grid slds-grid_align-spread">
+                                                                            <div class="slds-col">
+                                                                                <div class="slds-text-body_small">1st → 2nd Follow-up</div>
+                                                                            </div>
+                                                                            <div class="slds-col slds-text-align_right">
+                                                                                <div class="slds-text-body_small">{campaign.firstToSecondFollowUpRate}%</div>
+                                                                            </div>
+                                                                        </div>
+                                                                        <lightning-progress-bar value={campaign.firstToSecondFollowUpRate} size="small" 
+                                                                                            variant="warning" class="slds-m-vertical_xx-small"></lightning-progress-bar>
+                                                                    </div>
+                                                                    
+                                                                    <div class="slds-col slds-m-vertical_xx-small">
+                                                                        <div class="slds-grid slds-grid_align-spread">
+                                                                            <div class="slds-col">
+                                                                                <div class="slds-text-body_small">2nd → 3rd Follow-up</div>
+                                                                            </div>
+                                                                            <div class="slds-col slds-text-align_right">
+                                                                                <div class="slds-text-body_small">{campaign.secondToThirdFollowUpRate}%</div>
+                                                                            </div>
+                                                                        </div>
+                                                                        <lightning-progress-bar value={campaign.secondToThirdFollowUpRate} size="small" 
+                                                                                            variant="error" class="slds-m-vertical_xx-small"></lightning-progress-bar>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </template>
+                                <template if:false={campaignsData.length}>
+                                    <div class="slds-illustration slds-illustration_small">
+                                        <div class="slds-m-vertical_medium">
+                                            <lightning-icon icon-name="utility:info" size="medium" class="slds-m-bottom_medium"></lightning-icon>
+                                            <div class="slds-text-heading_small slds-text-align_center slds-m-around_large">
+                                                No campaign data found for the selected criteria.
+                                            </div>
+                                            <div class="slds-text-body_regular slds-text-align_center">
+                                                Try adjusting your date range, user filter, or campaign type filter.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+                            </template>
+                        </div>
+                    </div>
+                </lightning-tab>
+                
+                <lightning-tab label="Table View" icon-name="utility:table">
+                    <!-- Summary Table -->
+                    <div class="slds-m-top_medium">
+                        <div class="slds-box slds-theme_default">
+                            <div class="table-container">
+                                <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_striped slds-table_fixed-layout">
+                                    <thead>
+                                        <tr class="slds-line-height_reset">
+                                            <th class="slds-text-title_caps" scope="col">
+                                                <div class="slds-truncate" title="Campaign">Campaign</div>
+                                            </th>
+                                            <th class="slds-text-title_caps" scope="col">
+                                                <div class="slds-truncate" title="Type">Type</div>
+                                            </th>
+                                            <th class="slds-text-title_caps" scope="col">
+                                                <div class="slds-truncate" title="Status">Status</div>
+                                            </th>
+                                            <th class="slds-text-title_caps" scope="col">
+                                                <div class="slds-truncate" title="Total Leads">Total Leads</div>
+                                            </th>
+                                            <th class="slds-text-title_caps" scope="col">
+                                                <div class="slds-truncate" title="1st Email">1st Email</div>
+                                            </th>
+                                            <th class="slds-text-title_caps" scope="col">
+                                                <div class="slds-truncate" title="1st Follow-up">1st Follow-up</div>
+                                            </th>
+                                            <th class="slds-text-title_caps" scope="col">
+                                                <div class="slds-truncate" title="2nd Follow-up">2nd Follow-up</div>
+                                            </th>
+                                            <th class="slds-text-title_caps" scope="col">
+                                                <div class="slds-truncate" title="3rd Follow-up">3rd Follow-up</div>
+                                            </th>
+                                            <!-- <th class="slds-text-title_caps" scope="col">
+                                                <div class="slds-truncate" title="Score">Score</div>
+                                            </th> -->
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <template for:each={campaignsData} for:item="campaign">
+                                            <tr key={campaign.campaignId} class="slds-hint-parent">
+                                                <td data-label="Campaign">
+                                                    <div class="slds-truncate" title={campaign.campaignName}>
+                                                        {campaign.campaignName}
+                                                    </div>
+                                                </td>
+                                                <td data-label="Type">
+                                                    <div class="slds-truncate" title={campaign.campaignType}>
+                                                        {campaign.campaignType}
+                                                    </div>
+                                                </td>
+                                                <td data-label="Status">
+                                                    <div class="slds-truncate" title={campaign.status}>
+                                                        <template if:true={campaign.isAtRisk}>
+                                                            <lightning-badge label="At Risk" class="risk-badge-table"></lightning-badge>
+                                                        </template>
+                                                        <template if:false={campaign.isAtRisk}>
+                                                            <lightning-badge label="On Track" class="success-badge-table"></lightning-badge>
+                                                        </template>
+                                                    </div>
+                                                </td>
+                                                <td data-label="Total Leads">
+                                                    <div class="slds-truncate" title={campaign.totalLeads}>
+                                                        {campaign.totalLeads}
+                                                    </div>
+                                                </td>
+                                                <td data-label="1st Email">
+                                                    <div class="slds-truncate" title={campaign.firstEmailCount}>
+                                                        {campaign.firstEmailCount} ({campaign.firstEmailPercentage}%)
+                                                        <!-- <template if:true={campaign.firstEmailTrend}>
+                                                            <lightning-icon icon-name={campaign.firstEmailTrendIcon} size="xx-small" class={campaign.firstEmailTrendClass}></lightning-icon>
+                                                        </template> -->
+                                                    </div>
+                                                </td>
+                                                <td data-label="1st Follow-up">
+                                                    <div class="slds-truncate" title={campaign.firstFollowUpCount}>
+                                                        {campaign.firstFollowUpCount} ({campaign.firstFollowUpPercentage}%)
+                                                        <!-- <template if:true={campaign.firstFollowUpTrend}>
+                                                            <lightning-icon icon-name={campaign.firstFollowUpTrendIcon} size="xx-small" class={campaign.firstFollowUpTrendClass}></lightning-icon>
+                                                        </template> -->
+                                                    </div>
+                                                </td>
+                                                <td data-label="2nd Follow-up">
+                                                    <div class="slds-truncate" title={campaign.secondFollowUpCount}>
+                                                        {campaign.secondFollowUpCount} ({campaign.secondFollowUpPercentage}%)
+                                                        <!-- <template if:true={campaign.secondFollowUpTrend}>
+                                                            <lightning-icon icon-name={campaign.secondFollowUpTrendIcon} size="xx-small" class={campaign.secondFollowUpTrendClass}></lightning-icon>
+                                                        </template> -->
+                                                    </div>
+                                                </td>
+                                                <td data-label="3rd Follow-up">
+                                                    <div class="slds-truncate" title={campaign.thirdFollowUpCount}>
+                                                        {campaign.thirdFollowUpCount} ({campaign.thirdFollowUpPercentage}%)
+                                                        <!-- <template if:true={campaign.thirdFollowUpTrend}>
+                                                            <lightning-icon icon-name={campaign.thirdFollowUpTrendIcon} size="xx-small" class={campaign.thirdFollowUpTrendClass}></lightning-icon>
+                                                        </template> -->
+                                                    </div>
+                                                </td>
+                                                <!-- <td data-label="Score">
+                                                    <div class="slds-truncate" title={campaign.performanceScore}>
+                                                        <div class={campaign.scoreClass}>{campaign.performanceScore}/100</div>
+                                                    </div>
+                                                </td> -->
+                                            </tr>
+                                        </template>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </lightning-tab>
+                
+                <!-- <lightning-tab label="Charts" icon-name="utility:chart">
+                    <div class="slds-grid slds-wrap">
+                        
+                        <div class="slds-col slds-size_1-of-1 slds-large-size_1-of-2 slds-p-around_small">
+                            <div class="slds-box slds-theme_default chart-container">
+                                <div class="slds-text-heading_small slds-m-bottom_small">Overall Campaign Performance</div>
+                                <div class="chart-placeholder" lwc:dom="manual"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="slds-col slds-size_1-of-1 slds-large-size_1-of-2 slds-p-around_small">
+                            <div class="slds-box slds-theme_default chart-container">
+                                <div class="slds-text-heading_small slds-m-bottom_small">Email Completion Trends</div>
+                                <div class="chart-placeholder" lwc:dom="manual"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="slds-col slds-size_1-of-1 slds-large-size_1-of-2 slds-p-around_small">
+                            <div class="slds-box slds-theme_default chart-container">
+                                <div class="slds-text-heading_small slds-m-bottom_small">Campaign Type Comparison</div>
+                                <div class="chart-placeholder" lwc:dom="manual"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="slds-col slds-size_1-of-1 slds-large-size_1-of-2 slds-p-around_small">
+                            <div class="slds-box slds-theme_default chart-container">
+                                <div class="slds-text-heading_small slds-m-bottom_small">Follow-up Conversion Rates</div>
+                                <div class="chart-placeholder" lwc:dom="manual"></div>
+                            </div>
+                        </div>
+                    </div>
+                </lightning-tab> -->
+            </lightning-tabset>
+        </div>
+    </lightning-card>
+</template>

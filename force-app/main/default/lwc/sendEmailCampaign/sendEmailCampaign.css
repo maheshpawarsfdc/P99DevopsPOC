@@ -1,0 +1,66 @@
+/* Gmail Campaign LWC Styles */
+
+.gmail-campaign-container {
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 16px;
+}
+
+.email-template-section,
+.merge-fields-container,
+.subject-input,
+.body-input {
+    margin-bottom: 16px;
+}
+
+.merge-fields-title {
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.merge-fields-buttons lightning-button {
+    margin-right: 8px;
+}
+
+.subject-input lightning-input,
+.body-input lightning-input-rich-text {
+    width: 100%;
+}
+
+.recipients-section {
+    margin-top: 16px;
+    padding: 12px;
+    background-color: #f4f6f9;
+    border-radius: 4px;
+}
+
+.recipients-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.email-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 20px;
+}
+
+.email-actions lightning-button {
+    margin-left: 8px;
+}
+
+.slds-modal__container {
+    max-width: 600px;
+}
+
+.slds-modal__header {
+    background-color: #0070d2;
+    color: white;
+}
+
+.slds-modal__footer {
+    display: flex;
+    justify-content: flex-end;
+}

@@ -1,0 +1,222 @@
+/* Base Styles */
+.campaign-card {
+    transition: all 0.2s ease;
+    border-radius: 0.25rem;
+    height: 100%;
+}
+
+.campaign-card:hover {
+    box-shadow: 0 8px 16px 0 rgba(0,0,0,0.1);
+    transform: translateY(-2px);
+}
+
+.campaign-title {
+    font-weight: 700;
+    color: rgb(22, 50, 92);
+}
+
+.progress-section {
+    border-top: 1px solid #f3f3f3;
+    padding-top: 0.75rem;
+}
+
+.conversion-metrics {
+    border-top: 1px solid #f3f3f3;
+}
+
+.table-container {
+    overflow-x: auto;
+}
+
+/* Sidebar & Layout Styles */
+.sidebar-content-wrapper {
+    display: flex;
+    position: relative;
+}
+
+.sidebar {
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.sidebar.expanded {
+    width: 300px;
+    min-width: 300px;
+}
+
+.sidebar.collapsed {
+    width: 50px;
+    min-width: 50px;
+    overflow: hidden;
+}
+
+.sidebar-toggle {
+    position: absolute;
+    right: -15px;
+    top: 20px;
+    z-index: 10;
+    background: white;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    cursor: pointer;
+}
+
+.main-content {
+    transition: all 0.3s ease;
+    flex: 1;
+    padding-left: 1rem;
+}
+
+.main-content.sidebar-collapsed {
+    padding-left: 1rem;
+}
+
+.filter-panel {
+    height: 100%;
+}
+
+/* Score Card Styles */
+.score-card {
+    font-weight: 600;
+}
+
+.score-excellent {
+    background-color: #4bca81;
+    color: white;
+}
+
+.score-good {
+    background-color: #1589ee;
+    color: white;
+}
+
+.score-average {
+    background-color: #ffb75d;
+    color: white;
+}
+
+.score-poor {
+    background-color: #ff9e9e;
+    color: #514f4d;
+}
+
+/* Risk Indicators */
+.risk-indicator {
+    color: #e15249;
+    font-weight: 700;
+}
+
+.risk-badge {
+    background-color: #e15249;
+    color: white;
+}
+
+.success-badge-table {
+    background-color: #4bca81;
+    color: white;
+}
+
+.risk-badge-table {
+    background-color: #e15249;
+    color: white;
+}
+
+/* Trend Indicators */
+.trend-indicator-up {
+    --sds-c-icon-color-foreground-default: #4bca81;
+}
+
+.trend-indicator-down {
+    --sds-c-icon-color-foreground-default: #e15249;
+}
+
+.trend-icon-up {
+    --sds-c-icon-color-foreground-default: #4bca81;
+    margin-right: 2px;
+}
+
+.trend-icon-down {
+    --sds-c-icon-color-foreground-default: #e15249;
+    margin-right: 2px;
+}
+
+/* Chart containers */
+.chart-container {
+    height: 300px;
+    position: relative;
+}
+
+.chart-placeholder {
+    height: 250px;
+    background-color: #f9f9f9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #706e6b;
+}
+
+/* Dark Mode Styles */
+.dark-mode {
+    background-color: #1a1c21;
+    color: #ffffff;
+}
+
+.dark-mode .slds-card {
+    background-color: #2a2c35;
+    border-color: #3a3c45;
+}
+
+.dark-mode .slds-box {
+    background-color: #2a2c35;
+    border-color: #3a3c45;
+}
+
+.dark-mode .slds-theme_default {
+    background-color: #2a2c35;
+    color: #ffffff;
+}
+
+.dark-mode .slds-theme_shade {
+    background-color: #3a3c45;
+    color: #ffffff;
+}
+
+.dark-mode .campaign-title {
+    color: #ffffff;
+}
+
+.dark-mode .slds-text-color_weak {
+    color: #a7b9c3;
+}
+
+.dark-mode .progress-section {
+    border-top-color: #3a3c45;
+}
+
+.dark-mode .conversion-metrics {
+    border-top-color: #3a3c45;
+}
+
+.dark-mode .slds-table {
+    background-color: #2a2c35;
+    color: #ffffff;
+}
+
+.dark-mode .slds-table th {
+    background-color: #3a3c45;
+    color: #ffffff;
+}
+
+.dark-mode .slds-table td {
+    border-color: #3a3c45;
+}
+
+.dark-mode .chart-placeholder {
+    background-color: #3a3c45;
+    color: #a7b9c3;
+}
