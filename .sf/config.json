@@ -1,3 +1,4 @@
 {
-  "target-org": "DevopsScratchOrg"
+  "target-dev-hub": "DevopsDevhub",
+  "target-org": "DevopsDevhub"
 }
